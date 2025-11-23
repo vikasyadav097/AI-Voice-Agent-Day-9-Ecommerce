@@ -1,147 +1,106 @@
-Day 3 – Health & Wellness Voice Companion
-Today you will build a health and wellness–oriented voice agent that acts as a supportive, but realistic and grounded companion.
+# Day 3 – Health & Wellness Voice Companion
 
-The core idea:
-Each day, the agent checks in with the user about their mood and goals, has a short conversation, and stores the results in a JSON file so it can refer back to previous days.
+## Primary Goal (Required)
 
-Primary Goal (Required)
-Build a daily health & wellness voice companion that:
+Build a daily health & wellness–oriented voice agent that acts as a supportive, but realistic and grounded companion.
 
-Uses a clear, grounded system prompt.
-Conducts short daily check-ins via voice.
-Persists the key data from each check-in in a JSON file.
-Uses past data (from JSON) to inform the next conversation in a basic way.
-Behaviour Requirements
-Your agent should:
+### Core Requirements
 
-Ask about mood and energy
+1. **Clear, grounded system prompt**
+   - Supportive but realistic tone
+   - Non-medical, non-diagnostic approach
+   - Focus on practical self-care
 
-Example topics (but not hard-coded):
-“How are you feeling today?”
-“What’s your energy like?”
-“Anything stressing you out right now?”
-Avoid diagnosis or medical claims. This is a supportive check-in companion, not a clinician.
-Ask about intentions / objectives for the day
+2. **Conducts short daily check-ins via voice**
+   - Ask about mood and energy
+   - Inquire about stress or concerns
+   - Collect 1-3 daily objectives/intentions
+   - Offer simple, realistic advice
+   - Close with a brief recap
 
-Simple, practical goals:
-“What are 1–3 things you’d like to get done today?”
-“Is there anything you want to do for yourself (rest, exercise, hobbies)?”
-Offer simple, realistic advice or reflections
+3. **Persists key data from each check-in in a JSON file**
+   - Store in `wellness_log.json`
+   - Include: date, time, mood, energy, stress, objectives, notes
 
-Suggestions should be:
-Small, actionable, and grounded.
-Non-medical, non-diagnostic.
-Examples of advice style:
-Break large goals into smaller steps.
-Encourage short breaks.
-Offer simple grounding ideas (e.g., “take a 5-minute walk”).
-Close the check-in with a brief recap
+4. **Uses past data to inform the next conversation**
+   - Reference previous check-ins naturally
+   - Show continuity between sessions
 
-Repeat back:
-Today’s mood summary.
-The main 1–3 objectives.
-Confirm: “Does this sound right?”
-Use JSON-based persistence
+## Implementation Status: ✅ COMPLETE
 
-After each check-in, write an entry to a JSON file from the Python backend.
-On a new session:
-Read the JSON file.
-Provide at least one small reference to previous check-ins.
-For example: “Last time we talked, you mentioned being low on energy. How does today compare?”
-Data Persistence Requirements
-Store data in a single JSON file (e.g., wellness_log.json).
+### What Was Built:
 
-Each session entry should at least contain:
+#### Backend (`backend/src/agent.py`)
+- ✅ Wellness companion with supportive persona
+- ✅ 5 function tools for data collection:
+  - `set_mood()` - Record current mood
+  - `set_energy()` - Record energy level
+  - `set_stress()` - Note stress/concerns
+  - `add_objective()` - Add daily goals (1-3)
+  - `add_note()` - Additional reflections
+  - `complete_checkin()` - Save to JSON log
+- ✅ JSON persistence in `wellness_log.json`
+- ✅ Previous check-in context loading
+- ✅ Real-time data publishing to frontend
 
-Date/time of the check-in
-Self-reported mood (text, or a simple scale)
-One or more stated objectives / intentions
-Optional: a short agent-generated summary sentence
-You can choose the exact schema, but keep it consistent and human-readable.
+#### Frontend (`frontend/components/app/wellness-display.tsx`)
+- ✅ Visual checklist display (similar to Day 2)
+- ✅ Real-time updates as agent collects data
+- ✅ Checkmark indicators for completed items
+- ✅ Blue wellness theme
+- ✅ Compact, non-obtrusive UI
+- ✅ Completion status animation
 
-Resources:
-https://docs.livekit.io/agents/build/tools/
-https://docs.livekit.io/agents/build/agents-handoffs/#passing-state
-https://docs.livekit.io/agents/build/tasks/
-https://github.com/livekit/agents/blob/main/examples/drive-thru/agent.py
-If you achieve everything in this section, you have completed the Day 3 primary goal.
+### Data Structure
 
-Advanced Goals (Optional)
-The advanced goals are about:
+```json
+{
+  "check_ins": [
+    {
+      "date": "2025-11-23",
+      "time": "22:00:00",
+      "timestamp": "2025-11-23T22:00:00",
+      "mood": "good",
+      "energy": "high",
+      "stress": "work deadline",
+      "objectives": ["finish report", "exercise", "relax"],
+      "notes": "feeling motivated",
+      "summary": "Mood: good, Energy: high, Objectives: 3"
+    }
+  ]
+}
+```
 
-Integrating MCP servers so the agent can manage tasks/events in real tools.
-Adding slightly richer insights from the stored data.
-Resources:
-https://docs.livekit.io/agents/build/tools/#external-tools-and-mcp
-https://github.com/livekit-examples/python-agents-examples/tree/main/mcp
-https://modelcontextprotocol.io/docs/getting-started/intro
-Advanced Goal 1: MCP Integration for Tasks/Notes
-Connect your voice companion to an MCP server so it can create or update items in an external system when the user sets goals.
+### Conversation Flow
 
-Examples (you can pick one, choose your own, or even create your own):
+1. **Greeting** - Warm welcome with reference to previous session
+2. **Mood Assessment** - "How are you feeling today?"
+3. **Energy Check** - "What's your energy level like?"
+4. **Stress Inquiry** - "Anything stressing you out?"
+5. **Daily Objectives** - "What 1-3 things would you like to accomplish?"
+6. **Practical Advice** - Small, actionable suggestions
+7. **Recap & Confirmation** - Summary of mood, energy, and goals
+8. **Data Persistence** - Save to `wellness_log.json`
 
-Notion MCP server:
+## Advanced Goals (Optional)
 
-Create a “Daily Wellness” database or page.
-For each check-in, create a new entry with:
-Date
-Mood
-Objectives
-Optionally, mark objectives as done in follow-up sessions.
-Resources:
-https://developers.notion.com/docs/mcp
+### Advanced Goal 1: MCP Integration for Tasks/Notes
+- Connect to MCP servers (Notion, Todoist, Zapier)
+- Create tasks/notes in external systems
+- Conversational triggers for integrations
 
-Todoist MCP server:
+### Advanced Goal 2: Weekly Reflection Using JSON History
+- Analyze mood trends over time
+- Track goal completion rates
+- Provide supportive insights
 
-When the user states objectives like “I want to finish the project report,” turn each into a Todoist task via MCP.
-Allow simple operations like:
-“Mark yesterday’s goal as done.”
-“Show me my tasks for today.”
-Resources:
-https://mcpmarket.com/server/todo-list
+### Advanced Goal 3: Follow-up Reminders via MCP Tools
+- Detect time-based activities
+- Create reminders via MCP
+- Confirmation flow before creating
 
-Zapier MCP server:
+## Resources
 
-Use Zapier to fan out events:
-For example, trigger a Zap that logs a summary to a Google Sheet, or sends a reminder, or schedules a google calendar event.
-Requirements:
-
-The MCP connection should be triggered from the Python backend when certain intents are detected:
-Example: user explicitly says “Turn these into tasks” or “Save this to Notion.”
-The agent should confirm what it did:
-“I created 3 tasks in Todoist based on your goals.”
-Resources:
-https://zapier.com/mcp
-Advanced Goal 2: Weekly Reflection Using JSON History
-Use the JSON file not just as a log, but as a source for simple aggregated insights.
-
-Examples:
-
-Allow the user to say:
-“How has my mood been this week?”
-“Did I follow through on my goals most days?”
-Compute basic aggregates:
-Average mood score over last N days (if you store a numeric scale).
-Count of days with at least one objective.
-The agent should:
-Summarize trends in plain language.
-Keep it non-judgmental and supportive.
-No complex analytics required; straightforward loops over JSON entries are enough.
-
-Advanced Goal 3: Follow-up Reminders via MCP Tools
-If you are already using an MCP server (Notion, Todoist, Zapier, etc.), extend it with simple follow-up behaviour.
-
-Examples:
-
-When the user mentions an important self-care activity (“I want to go for a walk at 6 pm”), offer to:
-Create a reminder or event through your MCP tool.
-The companion should:
-Rephrase the reminder back to the user for confirmation.
-Only call the MCP server after explicit confirmation.
-This is mostly about wiring MCP calls to specific conversational moments.
-
-Step 1: You only need the primary goal to complete Day 3; the Advanced Goals are for going the extra mile.
-Step 2: Successfully connect to the Health & Wellness Voice Companion in your browser and have a conversation.
-Step 3: Record a short video of your session with the agent and show the JSON file persisting the conversation in wellness_log.json.
-Step 4: Post the video on LinkedIn with a description of what you did for the task on Day 3. Also, mention that you are building voice agent using the fastest TTS API - Murf Falcon. Mention that you are part of the “Murf AI Voice Agent Challenge” and don't forget to tag the official Murf AI handle. Also, use hashtags #MurfAIVoiceAgentsChallenge and #10DaysofAIVoiceAgents
-Once your agent is running and your LinkedIn post is live, you’ve completed Day 3.
+- LiveKit Agents: https://docs.livekit.io/agents/build/tools/
+- MCP Documentation: https://modelcontextprotocol.io/docs/getting-started/intro
+- Example Code: https://github.com/livekit-examples/python-agents-examples/tree/main/mcp
