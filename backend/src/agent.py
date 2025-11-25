@@ -1,6 +1,5 @@
 import logging
 import json
-import random
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated
@@ -24,355 +23,229 @@ from livekit.plugins import silero, google, deepgram, noise_cancellation
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 import murf_tts
 
-logger = logging.getLogger("agent")
+logger = logging.getLogger("sdr_agent")
 
 load_dotenv(".env.local")
 
-# Load tutor content
-CONTENT_FILE = Path("../shared-data/day4_tutor_content.json")
-tutor_content = []
-if CONTENT_FILE.exists():
-    with open(CONTENT_FILE, "r") as f:
-        tutor_content = json.load(f)
-        logger.info(f"Loaded {len(tutor_content)} concepts from {CONTENT_FILE}")
+# Load company FAQ
+COMPANY_FAQ_FILE = Path("../shared-data/day5_company_faq.json")
+company_data = {}
+if COMPANY_FAQ_FILE.exists():
+    with open(COMPANY_FAQ_FILE, "r") as f:
+        company_data = json.load(f)
+        logger.info(f"Loaded company data for {company_data.get('company', {}).get('name', 'Unknown')}")
 else:
-    logger.warning(f"Content file not found: {CONTENT_FILE}")
+    logger.warning(f"Company FAQ file not found: {COMPANY_FAQ_FILE}")
 
-# Session state
-current_mode = None  # 'learn', 'quiz', or 'teach_back'
-current_concept = None
-current_room = None
+# Lead storage
+LEADS_FILE = Path("../shared-data/leads.json")
+lead_data = {
+    "name": None,
+    "company": None,
+    "email": None,
+    "role": None,
+    "use_case": None,
+    "team_size": None,
+    "timeline": None,
+    "questions_asked": [],
+    "conversation_summary": None,
+    "timestamp": None
+}
 
 
-# Greeter Agent - Initial agent that routes to learning modes
-class GreeterAgent(Agent):
+def save_lead():
+    """Save the current lead data to JSON file"""
+    lead_data["timestamp"] = datetime.now().isoformat()
+    
+    # Load existing leads
+    leads = []
+    if LEADS_FILE.exists():
+        with open(LEADS_FILE, "r") as f:
+            try:
+                leads = json.load(f)
+            except:
+                leads = []
+    
+    # Add new lead
+    leads.append(lead_data.copy())
+    
+    # Save back
+    with open(LEADS_FILE, "w") as f:
+        json.dump(leads, f, indent=2)
+    
+    logger.info(f"Lead saved: {lead_data.get('name')} from {lead_data.get('company')}")
+
+
+def search_faq(query: str) -> str:
+    """Simple keyword search in FAQ"""
+    query_lower = query.lower()
+    
+    # Search in FAQ
+    for faq_item in company_data.get("faq", []):
+        question = faq_item["question"].lower()
+        answer = faq_item["answer"]
+        
+        # Simple keyword matching
+        if any(word in question for word in query_lower.split()):
+            return answer
+    
+    # Search in products
+    for product in company_data.get("products", []):
+        if any(word in product["name"].lower() for word in query_lower.split()):
+            return f"{product['name']}: {product['description']} Best for: {product['use_case']}"
+    
+    return None
+
+
+class SDRAgent(Agent):
     def __init__(self) -> None:
+        company_name = company_data.get("company", {}).get("name", "our company")
+        company_desc = company_data.get("company", {}).get("description", "")
+        
         super().__init__(
-            instructions="""You are a friendly programming tutor. Your job is to help students learn programming concepts through three different modes.
-            
-            IMPORTANT: Check the current_mode to know which mode you're in:
-            - If current_mode is None: You're in greeter mode - welcome the student and explain the three modes
-            - If current_mode is 'learn': Explain programming concepts clearly with examples
-            - If current_mode is 'quiz': Ask questions to test their knowledge
-            - If current_mode is 'teach_back': Ask them to explain concepts and give feedback
-            
-            Three learning modes:
-            1. LEARN mode - You explain programming concepts with examples and analogies
-            2. QUIZ mode - You ask questions to test their knowledge
-            3. TEACH BACK mode - They explain concepts to you and you give feedback
-            
-            Available concepts:
-            - Variables: Containers that store values
-            - Loops: Repeat actions multiple times (for loops, while loops)
-            - Functions: Reusable blocks of code
-            - Conditional Statements: Make decisions (if/else)
-            - Arrays and Lists: Collections of multiple values
-            
-            When greeting: Ask which mode they'd like and use the switch_mode tool.
-            When in a mode: Behave according to that mode's purpose.
-            
-            Keep responses friendly, encouraging, and concise.""",
+            instructions=f"""You are a friendly and professional Sales Development Representative (SDR) for {company_name}.
+
+COMPANY OVERVIEW:
+{company_desc}
+
+YOUR ROLE:
+1. Greet visitors warmly and professionally
+2. Ask what brought them here and what they're working on
+3. Understand their needs and pain points
+4. Answer questions about our products, pricing, and services using the FAQ
+5. Naturally collect lead information during the conversation
+6. When they're done, summarize the conversation and thank them
+
+LEAD INFORMATION TO COLLECT (ask naturally, don't interrogate):
+- Name
+- Company name
+- Email address
+- Their role/position
+- What they want to use our product for (use case)
+- Team size
+- Timeline (now / soon / later)
+
+CONVERSATION STYLE:
+- Be warm, friendly, and consultative (not pushy)
+- Listen actively and ask follow-up questions
+- Focus on understanding their needs first
+- Use the tools to answer specific questions
+- Keep responses concise and conversational
+- When you don't know something, be honest and offer to find out
+
+IMPORTANT:
+- Use the search_faq tool when they ask about products, pricing, or features
+- Use the collect_lead_info tool to store information as you learn it
+- Use the end_call_summary tool when they say they're done or ready to leave
+- Don't make up information - only use what's in the FAQ""",
         )
     
     @function_tool
-    async def switch_mode(self, context: RunContext, mode: Annotated[str, "The learning mode: 'learn', 'quiz', or 'teach_back'"]):
-        """Switch to a specific learning mode.
+    async def search_faq(self, context: RunContext, query: Annotated[str, "The user's question about the company, product, or pricing"]):
+        """Search the company FAQ for answers to user questions.
         
         Args:
-            mode: The learning mode to switch to ('learn', 'quiz', or 'teach_back')
+            query: The user's question
         """
-        global current_mode
-        mode = mode.lower().strip()
+        logger.info(f"Searching FAQ for: {query}")
         
-        if mode not in ['learn', 'quiz', 'teach_back']:
-            return f"Sorry, '{mode}' is not a valid mode. Please choose 'learn', 'quiz', or 'teach back'."
+        # Track questions asked
+        if query not in lead_data["questions_asked"]:
+            lead_data["questions_asked"].append(query)
         
-        current_mode = mode
-        logger.info(f"Switching to mode: {mode}")
+        answer = search_faq(query)
         
-        # Return confirmation message
-        if mode == 'learn':
-            return "Great! I'm now in Learn mode. I'll explain programming concepts to you. What would you like to learn about? We have: variables, loops, functions, conditional statements, and arrays."
-        elif mode == 'quiz':
-            return "Awesome! I'm now in Quiz mode. I'll ask you questions to test your knowledge. Which topic would you like to be quizzed on? Variables, loops, functions, conditionals, or arrays?"
-        else:  # teach_back
-            return "Perfect! I'm now in Teach Back mode. You'll explain concepts to me. Which concept would you like to teach me about? Choose from: variables, loops, functions, conditionals, or arrays."
+        if answer:
+            return f"Based on our FAQ: {answer}"
+        else:
+            # Return general company info
+            return f"I don't have specific information about that in my FAQ. Let me tell you generally: {company_data.get('company', {}).get('description', 'We provide payment solutions for businesses.')}"
     
     @function_tool
-    async def get_concept(self, context: RunContext, concept_id: Annotated[str, "The concept ID: 'variables', 'loops', 'functions', 'conditionals', or 'arrays'"]):
-        """Get information about a programming concept.
+    async def collect_lead_info(
+        self, 
+        context: RunContext,
+        field: Annotated[str, "The field name: 'name', 'company', 'email', 'role', 'use_case', 'team_size', or 'timeline'"],
+        value: Annotated[str, "The value to store"]
+    ):
+        """Store lead information as it's collected during the conversation.
         
         Args:
-            concept_id: The ID of the concept to retrieve
+            field: Which field to update
+            value: The value to store
         """
-        global current_concept
-        
-        concept = next((c for c in tutor_content if c['id'] == concept_id.lower()), None)
-        if not concept:
-            return f"I don't have information about '{concept_id}'. Available concepts are: variables, loops, functions, conditionals, and arrays."
-        
-        current_concept = concept
-        logger.info(f"Retrieved concept: {concept['title']}")
-        
-        return f"Concept: {concept['title']}\n\nSummary: {concept['summary']}\n\nSample Question: {concept['sample_question']}"
-
-
-# Learn Mode Agent - Explains concepts (Voice: Matthew)
-class LearnAgent(Agent):
-    def __init__(self) -> None:
-        super().__init__(
-            instructions="""You are Ryan, a patient and clear programming tutor in LEARN mode.
-            
-            Your role is to explain programming concepts from the content file in a clear, beginner-friendly way.
-            Use analogies and examples to make concepts easy to understand.
-            
-            After explaining a concept, ask if the student has questions or if they'd like to:
-            - Learn another concept
-            - Switch to Quiz mode to test themselves
-            - Switch to Teach Back mode to explain it themselves
-            
-            Keep explanations concise but thorough. Use the get_concept tool to retrieve concept information.
-            
-            Your voice is warm, encouraging, and supportive.""",
-        )
+        if field in lead_data:
+            lead_data[field] = value
+            logger.info(f"Collected lead info: {field} = {value}")
+            return f"Got it, I've noted that down."
+        else:
+            return "I couldn't store that information."
     
     @function_tool
-    async def get_concept(self, context: RunContext, concept_id: Annotated[str, "The concept ID: 'variables', 'loops', 'functions', 'conditionals', or 'arrays'"]):
-        """Get a concept to explain.
+    async def end_call_summary(self, context: RunContext, summary: Annotated[str, "A brief summary of the conversation and the lead's needs"]):
+        """End the call and provide a summary of the lead.
         
         Args:
-            concept_id: The ID of the concept to retrieve
+            summary: Brief summary of the conversation
         """
-        global current_concept
+        lead_data["conversation_summary"] = summary
+        save_lead()
         
-        concept = next((c for c in tutor_content if c['id'] == concept_id.lower()), None)
-        if not concept:
-            return f"I don't have information about '{concept_id}'. Available concepts are: variables, loops, functions, conditionals, and arrays."
+        # Create verbal summary
+        name = lead_data.get("name", "there")
+        company = lead_data.get("company", "your company")
+        use_case = lead_data.get("use_case", "your needs")
+        timeline = lead_data.get("timeline", "soon")
         
-        current_concept = concept
-        logger.info(f"Explaining concept: {concept['title']}")
-        
-        return f"Let me explain {concept['title']}. {concept['summary']} Do you have any questions about this?"
-    
-    @function_tool
-    async def switch_to_quiz(self, context: RunContext):
-        """Switch to Quiz mode."""
-        global current_mode
-        current_mode = 'quiz'
-        await context.start_agent(QuizAgent())
-        return "Switching to Quiz mode with Alicia..."
-    
-    @function_tool
-    async def switch_to_teach_back(self, context: RunContext):
-        """Switch to Teach Back mode."""
-        global current_mode
-        current_mode = 'teach_back'
-        await context.start_agent(TeachBackAgent())
-        return "Switching to Teach Back mode with Ken..."
-
-
-# Quiz Mode Agent - Asks questions (Voice: Alicia)
-class QuizAgent(Agent):
-    def __init__(self) -> None:
-        super().__init__(
-            instructions="""You are Alicia, an enthusiastic quiz master in QUIZ mode.
-            
-            Your role is to test the student's knowledge by asking them questions about programming concepts.
-            Use the sample questions from the content file, or create variations.
-            
-            After they answer:
-            - Give positive, encouraging feedback
-            - Gently correct any misconceptions
-            - Offer to quiz them on another topic or switch modes
-            
-            Available concepts to quiz on:
-            - Variables
-            - Loops
-            - Functions  
-            - Conditional Statements
-            - Arrays and Lists
-            
-            Keep the atmosphere fun and low-pressure. Learning is about progress, not perfection!
-            
-            Your voice is energetic, supportive, and motivating.""",
-        )
-    
-    @function_tool
-    async def ask_question(self, context: RunContext, concept_id: Annotated[str, "The concept to quiz on"]):
-        """Ask a quiz question about a concept.
-        
-        Args:
-            concept_id: The concept ID to quiz on
-        """
-        global current_concept
-        
-        concept = next((c for c in tutor_content if c['id'] == concept_id.lower()), None)
-        if not concept:
-            return f"I don't have questions about '{concept_id}'. Let's try: variables, loops, functions, conditionals, or arrays."
-        
-        current_concept = concept
-        logger.info(f"Quizzing on concept: {concept['title']}")
-        
-        return f"Here's your question about {concept['title']}: {concept['sample_question']}"
-    
-    @function_tool
-    async def switch_to_learn(self, context: RunContext):
-        """Switch to Learn mode."""
-        global current_mode
-        current_mode = 'learn'
-        await context.start_agent(LearnAgent())
-        return "Switching to Learn mode with Matthew..."
-    
-    @function_tool
-    async def switch_to_teach_back(self, context: RunContext):
-        """Switch to Teach Back mode."""
-        global current_mode
-        current_mode = 'teach_back'
-        await context.start_agent(TeachBackAgent())
-        return "Switching to Teach Back mode with Ken..."
-
-
-# Teach Back Mode Agent - Student explains concepts (Voice: Ken)
-class TeachBackAgent(Agent):
-    def __init__(self) -> None:
-        super().__init__(
-            instructions="""You are Ken, a supportive coach in TEACH BACK mode.
-            
-            Your role is to ask the student to explain programming concepts back to you, as if they were teaching.
-            This is the most effective way to learn - by teaching!
-            
-            When a student explains a concept:
-            - Listen actively and encourage them
-            - Ask follow-up questions if they miss key points
-            - Give qualitative feedback: "Great job!", "You got the main idea!", "Let me add one thing..."
-            - Don't be overly critical - focus on what they got right
-            
-            After they teach you:
-            - Offer to let them teach another concept
-            - Suggest switching to Learn mode if they struggled
-            - Suggest Quiz mode to reinforce learning
-            
-            Your voice is calm, patient, and genuinely interested in their explanation.""",
-        )
-    
-    @function_tool
-    async def prompt_teaching(self, context: RunContext, concept_id: Annotated[str, "The concept for student to teach"]):
-        """Prompt the student to teach a concept.
-        
-        Args:
-            concept_id: The concept the student should explain
-        """
-        global current_concept
-        
-        concept = next((c for c in tutor_content if c['id'] == concept_id.lower()), None)
-        if not concept:
-            return f"I don't have that concept. Try: variables, loops, functions, conditionals, or arrays."
-        
-        current_concept = concept
-        logger.info(f"Student teaching concept: {concept['title']}")
-        
-        return f"Okay, I'm ready to learn! Please explain {concept['title']} to me as if I've never heard of it before. Take your time and use examples if you'd like."
-    
-    @function_tool
-    async def give_feedback(self, context: RunContext, feedback_type: Annotated[str, "Type of feedback: 'excellent', 'good', or 'needs_work'"]):
-        """Give feedback on the student's explanation.
-        
-        Args:
-            feedback_type: The quality of the explanation
-        """
-        feedback_messages = {
-            'excellent': "Excellent explanation! You really understand this concept. You explained it clearly and included good examples. Well done!",
-            'good': "Good job! You got the main idea across. Let me just add a couple of points to make it even stronger...",
-            'needs_work': "I can see you're on the right track. Let me help clarify a few points, and then maybe you'd like to try again or switch to Learn mode for a refresher?"
-        }
-        
-        return feedback_messages.get(feedback_type.lower(), feedback_messages['good'])
-    
-    @function_tool
-    async def switch_to_learn(self, context: RunContext):
-        """Switch to Learn mode."""
-        global current_mode
-        current_mode = 'learn'
-        await context.start_agent(LearnAgent())
-        return "Switching to Learn mode with Matthew..."
-    
-    @function_tool
-    async def switch_to_quiz(self, context: RunContext):
-        """Switch to Quiz mode."""
-        global current_mode
-        current_mode = 'quiz'
-        await context.start_agent(QuizAgent())
-        return "Switching to Quiz mode with Alicia..."
+        return f"Thank you so much for your time, {name}! I've captured all the details about {company} and your interest in using our solution for {use_case}. Based on our conversation, it sounds like you're looking to move forward {timeline}. I'll make sure our team follows up with you shortly. Have a great day!"
 
 
 def prewarm(proc: JobProcess):
+    """Prewarm the VAD model"""
     proc.userdata["vad"] = silero.VAD.load()
 
 
 async def entrypoint(ctx: JobContext):
-    global current_room, current_mode, current_concept
-    current_room = ctx.room
+    """Main entrypoint for the SDR agent"""
     
-    # Reset session state when starting
-    current_mode = None
-    current_concept = None
-    
-    # Logging setup
-    ctx.log_context_fields = {
-        "room": ctx.room.name,
+    # Reset lead data for new session
+    global lead_data
+    lead_data = {
+        "name": None,
+        "company": None,
+        "email": None,
+        "role": None,
+        "use_case": None,
+        "team_size": None,
+        "timeline": None,
+        "questions_asked": [],
+        "conversation_summary": None,
+        "timestamp": None
     }
     
-    # Log the agent name if provided
-    if hasattr(ctx, 'agent_name') and ctx.agent_name:
-        logger.info(f"Agent name provided: {ctx.agent_name}")
-    else:
-        logger.info("No agent name provided")
-        
-    # Log when we receive a job
-    logger.info(f"Received job for room: {ctx.room.name}")
-    logger.info(f"Job context: {ctx}")
+    logger.info(f"Starting SDR agent for room: {ctx.room.name}")
     
-    # Log when we start processing
-    logger.info("Starting to process job...")
-
-    # Create session factory that can be reused for different agents
-    def create_session(agent_type: str):
-        # Choose voice based on agent type - Using Murf Falcon voices
-        voice_map = {
-            'greeter': 'en-US-ryan',         # Greeter uses Ryan (male, young adult)
-            'learn': 'en-US-ryan',           # Learn mode uses Ryan
-            'quiz': 'en-US-alicia',          # Quiz mode uses Alicia (female, young adult)
-            'teach_back': 'en-US-ken'        # Teach back mode uses Ken (male, middle-aged)
-        }
-        
-        voice = voice_map.get(agent_type, 'en-US-ryan')
-        logger.info(f"Creating session for {agent_type} with Murf voice {voice}")
-        
-        return AgentSession(
-            stt=deepgram.STT(
-                model="nova-3",
-                language="en-US",
-                interim_results=True,
+    # Create session with Murf TTS
+    session = AgentSession(
+        stt=deepgram.STT(
+            model="nova-3",
+            language="en-US",
+        ),
+        llm=google.LLM(
+            model="gemini-2.5-flash",
+            temperature=0.7,
+        ),
+        tts=murf_tts.TTS(
+            voice="en-US-ryan",
+            style="Conversational",
+            tokenizer=tokenize.basic.SentenceTokenizer(
+                min_sentence_len=5,
             ),
-            llm=google.LLM(
-                model="gemini-2.5-flash",
-                temperature=0.7,
-            ),
-            tts=murf_tts.TTS(
-                voice=voice,
-                style="Conversational",
-                tokenizer=tokenize.basic.SentenceTokenizer(
-                    min_sentence_len=10,
-                ),
-            ),
-            turn_detection=MultilingualModel(),
-            vad=ctx.proc.userdata["vad"],
-            preemptive_generation=False,  # Disable to reduce stuttering
-        )
-
-    # Start with Greeter agent (Matthew voice)
-    session = create_session('greeter')
-
+        ),
+        turn_detection=MultilingualModel(),
+        vad=ctx.proc.userdata["vad"],
+    )
+    
     # Metrics collection
     usage_collector = metrics.UsageCollector()
 
@@ -387,18 +260,18 @@ async def entrypoint(ctx: JobContext):
 
     ctx.add_shutdown_callback(log_usage)
 
-    # Start the session with Greeter agent
-    greeter = GreeterAgent()
+    # Start the session with SDR agent
+    sdr = SDRAgent()
     
     await session.start(
-        agent=greeter,
+        agent=sdr,
         room=ctx.room,
         room_input_options=RoomInputOptions(
             noise_cancellation=noise_cancellation.BVC(),
         ),
     )
 
-    # Join the room and connect to the user
+    # Join the room
     await ctx.connect()
 
 

@@ -1,47 +1,47 @@
-# Day 4 - Teach-the-Tutor: Active Recall Coach
+# 💼 Day 5: AI SDR Agent with Lead Capture
 
-A voice-powered AI tutor built with LiveKit Agents and Murf AI TTS that helps you learn programming concepts through three interactive modes.
+A voice-powered Sales Development Representative (SDR) built with LiveKit Agents and Murf AI TTS that answers company questions and captures lead information naturally during conversations.
 
 ## 🎯 Features
 
-### Three Learning Modes
+### SDR Capabilities
+- **Company FAQ** - Answers questions about Razorpay products, pricing, and services
+- **Natural Lead Capture** - Collects prospect information during conversation without feeling like an interrogation
+- **Professional Call Summary** - Provides closing remarks and saves lead data automatically
+- **Smart Question Tracking** - Records all questions asked during the call
 
-1. **Learn Mode** - The AI explains programming concepts with examples and analogies
-2. **Quiz Mode** - Test your knowledge with interactive questions
-3. **Teach Back Mode** - Explain concepts back to the AI and receive feedback
-
-### Programming Concepts Covered
-
-- Variables
-- Loops (for and while)
-- Functions
-- Conditional Statements (if/else)
-- Arrays and Lists
+### Lead Information Collected
+- Name
+- Company
+- Email
+- Role/Position
+- Use Case
+- Team Size
+- Timeline (now/soon/later)
+- Questions Asked
+- Conversation Summary
 
 ### Voice Integration
-
-- **Murf AI Falcon TTS** - High-quality, natural-sounding voices
+- **Murf AI Falcon TTS** - High-quality, natural-sounding voice (Ryan voice with Conversational style)
 - **Deepgram STT** - Fast and accurate speech recognition
-- **Google Gemini 2.5 Flash** - Intelligent conversation handling
+- **Google Gemini 2.5 Flash** - Intelligent conversation handling with function calling
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-
-- Python 3.9+
+- Python 3.11+
 - Node.js 18+
+- Murf AI API Key
+- Deepgram API Key
+- Google Gemini API Key
 - LiveKit Server
-- API Keys:
-  - Murf AI API Key
-  - Deepgram API Key
-  - Google AI API Key
 
 ### Installation
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/GhanshyamJha05/fourth_day_task_murf_api.git
-cd fourth_day_task_murf_api
+git clone https://github.com/GhanshyamJha05/fifth_day_Murf_api.git
+cd fifth_day_Murf_api/ten-days-of-voice-agents-2025
 ```
 
 2. **Setup Backend**
@@ -52,19 +52,18 @@ python -m venv .venv
 # or
 source .venv/bin/activate  # Mac/Linux
 
-pip install -e .
+pip install -r requirements.txt  # or use uv
 ```
 
-3. **Configure Environment Variables**
-
+3. **Configure Backend Environment**
 Create `backend/.env.local`:
 ```env
-LIVEKIT_URL=ws://127.0.0.1:7880
+LIVEKIT_URL=ws://localhost:7880
 LIVEKIT_API_KEY=devkey
 LIVEKIT_API_SECRET=secret
-GOOGLE_API_KEY=your_google_api_key
-MURF_API_KEY=your_murf_api_key
-DEEPGRAM_API_KEY=your_deepgram_api_key
+DEEPGRAM_API_KEY=your_deepgram_key
+GOOGLE_API_KEY=your_gemini_key
+MURF_API_KEY=your_murf_key
 ```
 
 4. **Setup Frontend**
@@ -73,68 +72,70 @@ cd ../frontend
 npm install
 ```
 
+5. **Configure Frontend Environment**
 Create `frontend/.env.local`:
 ```env
-NEXT_PUBLIC_LIVEKIT_URL=ws://127.0.0.1:7880
+LIVEKIT_URL=ws://localhost:7880
 LIVEKIT_API_KEY=devkey
 LIVEKIT_API_SECRET=secret
+NEXT_PUBLIC_LIVEKIT_URL=ws://localhost:7880
 ```
 
 ### Running the Application
 
-1. **Start LiveKit Server** (in project root)
+1. **Start LiveKit Server** (Terminal 1)
 ```bash
-./livekit-server.exe --dev
+cd ten-days-of-voice-agents-2025
+./livekit-server.exe --dev  # Windows
+# or
+./livekit-server --dev  # Mac/Linux
 ```
 
-2. **Start Backend Agent** (in new terminal)
+2. **Start SDR Agent** (Terminal 2)
 ```bash
 cd backend
-.venv\Scripts\activate
+.venv\Scripts\activate  # Windows
 python src/agent.py dev
 ```
 
-3. **Start Frontend** (in new terminal)
+3. **Start Frontend** (Terminal 3)
 ```bash
 cd frontend
 npm run dev
 ```
 
 4. **Open Browser**
-Navigate to `http://localhost:3000` (or the port shown in terminal)
+Navigate to `http://localhost:3000`
 
-## 💬 How to Use
+## 💬 Example Conversation
 
-1. **Connect** - Click the connect button and allow microphone access
-2. **Greet** - Say "Hello" to start the conversation
-3. **Choose Mode** - Say "I want to learn mode" or "quiz mode" or "teach back mode"
-4. **Learn** - Interact with the AI tutor based on your chosen mode
-5. **Switch Modes** - You can switch between modes anytime by asking
+```
+SDR: "Hi! Welcome to Razorpay. What brings you here today?"
 
-### Example Conversations
+You: "I'm looking for a payment solution for my online store"
 
-**Learn Mode:**
-- "Explain variables to me"
-- "Tell me about loops"
-- "What are functions?"
+SDR: "That's great! What's your name?"
 
-**Quiz Mode:**
-- "Quiz me on variables"
-- "Ask me about loops"
-- "Test my knowledge of conditionals"
+You: "I'm John from TechStore"
 
-**Teach Back Mode:**
-- "I'll explain variables"
-- "Let me teach you about functions"
-- "I want to explain loops"
+SDR: "Nice to meet you, John! What kind of products does TechStore sell?"
 
-## 🏗️ Project Structure
+You: "We sell electronics. How much does your payment gateway cost?"
+
+SDR: "Our pricing is simple - 2% for domestic cards, UPI is free, and there are no setup fees!"
+
+You: "That sounds good. I'm ready to move forward"
+
+SDR: "Thank you so much for your time, John! I've captured all the details about TechStore..."
+```
+
+## 📁 Project Structure
 
 ```
 .
 ├── backend/
 │   ├── src/
-│   │   ├── agent.py          # Main agent logic with mode switching
+│   │   ├── agent.py          # Main SDR agent with lead capture
 │   │   └── murf_tts.py       # Murf AI TTS integration
 │   ├── .env.local            # Backend environment variables
 │   └── pyproject.toml        # Python dependencies
@@ -144,95 +145,84 @@ Navigate to `http://localhost:3000` (or the port shown in terminal)
 │   ├── .env.local           # Frontend environment variables
 │   └── package.json         # Node dependencies
 ├── shared-data/
-│   └── day4_tutor_content.json  # Learning content
-└── livekit-server.exe       # LiveKit server binary
+│   ├── day5_company_faq.json # Razorpay FAQ and company info
+│   └── leads.json            # Captured leads (auto-created)
+├── challenges/
+│   └── Day 5 Task.md         # Day 5 challenge documentation
+└── livekit-server.exe        # LiveKit server binary
 ```
 
-## 🔧 Technical Details
+## 🔧 Customization
 
-### Backend Stack
-- **LiveKit Agents SDK** - Voice agent framework
-- **Murf AI Falcon** - Text-to-speech (Ryan voice)
-- **Deepgram Nova-3** - Speech-to-text
-- **Google Gemini 2.5 Flash** - LLM for conversation
+### Change Company Information
 
-### Frontend Stack
-- **Next.js 15** - React framework
-- **LiveKit Client SDK** - Real-time communication
-- **Tailwind CSS** - Styling
+Edit `shared-data/day5_company_faq.json` to customize:
+- Company name and description
+- Products and services
+- Pricing information
+- FAQ questions and answers
 
-## 📝 Content File
+### Modify Voice Settings
 
-The tutor content is stored in `shared-data/day4_tutor_content.json`:
-
-```json
-[
-  {
-    "id": "variables",
-    "title": "Variables",
-    "summary": "Variables are like labeled containers...",
-    "sample_question": "What is a variable and why is it useful?"
-  }
-]
+In `backend/src/agent.py`, update the TTS configuration:
+```python
+tts=murf_tts.TTS(
+    voice="en-US-ryan",  # Change voice
+    style="Conversational",  # Change style
+    tokenizer=tokenize.basic.SentenceTokenizer(
+        min_sentence_len=5,  # Adjust for faster/slower responses
+    ),
+)
 ```
 
-## 🎤 Voice Configuration
+### Adjust Lead Fields
 
-The agent uses Murf AI Falcon voice:
-- **Voice ID**: `en-US-ryan`
-- **Style**: Conversational
-- **Sample Rate**: 24kHz
-- **Format**: WAV (Mono)
+Modify the `lead_data` dictionary in `agent.py` to capture different information.
 
-## 🐛 Troubleshooting
+## 📊 Viewing Captured Leads
 
-### Agent Not Responding
-- Check all three services are running (LiveKit, Backend, Frontend)
-- Verify API keys in `.env.local` files
-- Check browser console for errors
+Leads are automatically saved to `shared-data/leads.json` after each call. Each lead includes:
+- Timestamp
+- All collected information
+- Questions asked during the call
+- Conversation summary
 
-### No Audio
-- Ensure microphone permissions are granted
-- Check Murf API key is valid
-- Verify audio output device is working
+## 🛠️ Tech Stack
 
-### Connection Issues
-- Confirm LiveKit server is running on port 7880
-- Check firewall settings
-- Verify `.env.local` URLs match
+- **Backend**: Python 3.11, LiveKit Agents SDK
+- **Frontend**: Next.js 15, React, TypeScript
+- **Voice**: Murf AI Falcon TTS, Deepgram STT
+- **LLM**: Google Gemini 2.5 Flash
+- **Real-time**: LiveKit WebRTC
 
-## 📚 Resources
+## 📝 API Keys Required
+
+1. **Murf AI** - Get from [murf.ai](https://murf.ai)
+2. **Deepgram** - Get from [deepgram.com](https://deepgram.com)
+3. **Google Gemini** - Get from [ai.google.dev](https://ai.google.dev)
+
+## 🎓 Learning Resources
 
 - [LiveKit Agents Documentation](https://docs.livekit.io/agents/)
-- [Murf AI API Documentation](https://murf.ai/api/docs)
-- [Deepgram API Documentation](https://developers.deepgram.com/)
-- [Google AI Documentation](https://ai.google.dev/)
+- [Murf AI API Docs](https://murf.ai/api-docs)
+- [Deepgram API Docs](https://developers.deepgram.com/)
+- [Google Gemini API Docs](https://ai.google.dev/docs)
 
-## 🏆 Challenge Completion
+## 🤝 Contributing
 
-This project completes Day 4 of the Murf AI Voice Agent Challenge:
-- ✅ Three learning modes (Learn, Quiz, Teach Back)
-- ✅ Content-driven conversations
-- ✅ Mode switching functionality
-- ✅ Murf Falcon TTS integration
-- ✅ Interactive voice interface
+This is a challenge project, but feel free to fork and customize for your own use cases!
 
 ## 📄 License
 
 MIT License - See LICENSE file for details
 
-## 👤 Author
-
-**Ghanshyam Jha**
-- GitHub: [@GhanshyamJha05](https://github.com/GhanshyamJha05)
-- Challenge: #MurfAIVoiceAgentsChallenge #10DaysofAIVoiceAgents
-
 ## 🙏 Acknowledgments
 
-- Murf AI for the Voice Agent Challenge
+Built as part of the Murf AI Voice Agent Challenge - Day 5
+- Challenge by Murf AI
 - LiveKit for the amazing agents framework
-- The open-source community
+- Razorpay for the example company data
 
 ---
 
-Built with ❤️ for the Murf AI Voice Agent Challenge
+**Made with ❤️ by Ghanshyam Jha**
