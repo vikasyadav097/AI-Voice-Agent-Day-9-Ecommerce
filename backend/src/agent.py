@@ -19,10 +19,12 @@ from livekit.agents import (
     function_tool,
     RunContext
 )
+
 from livekit.plugins import silero, google, deepgram, noise_cancellation
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 import murf_tts
 import commerce
+
 
 logger = logging.getLogger("shop_agent")
 
@@ -46,6 +48,7 @@ class ShopAgent(Agent):
    - tshirt-001: Neural Network T-Shirt (₹799) - 100% cotton, circuit board design, breathable fabric
    - tshirt-002: AI Developer Tee (₹699) - Soft premium cotton, "Powered by AI" print
 
+
 3. HOODIES (Sizes: M, L, XL):
    - hoodie-001: Cyberpunk Hoodie (₹1999) - Premium fleece, neon accents, kangaroo pocket
    - hoodie-002: Code Warrior Hoodie (₹2299) - Extra warm, perfect for cold offices
@@ -67,6 +70,7 @@ Help customers discover products, answer questions, and add items to their cart!
 5. Keep responses warm, conversational, and under 30 words
 
 🌟 CONVERSATION EXAMPLES:
+
 
 Customer: "I want a gaming mouse"
 You: *Call get_product_details("mouse-001")* "I'd love to help! Our RGB Gaming Mouse is ₹1499. It has 16000 DPI, ergonomic grip, and beautiful RGB lighting. Would you like it?"
@@ -90,8 +94,10 @@ You: *Call add_to_cart("hoodie-001", 1, "L")* "Perfect! I've added the Cyberpunk
 - Celebrate their choices: "That's a fantastic pick!"
 - End with friendly questions: "What else can I help you find?"
 
+
 Remember: You're here to make shopping delightful and easy. Be their friendly guide!""",
         )
+        
     
     @function_tool
     async def get_products(
