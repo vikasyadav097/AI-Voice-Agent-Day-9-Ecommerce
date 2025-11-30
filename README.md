@@ -1,248 +1,336 @@
-# Day 9: E-commerce Voice Shopping Agent 🛍️
+🛍️ Day 9 — E-commerce Voice Shopping Agent
 
-A fully functional voice-powered shopping assistant built with LiveKit Agents, Next.js, and Murf TTS.
+A fully functional voice-powered online shopping assistant built using LiveKit Agents, Next.js, and Murf TTS, featuring natural voice conversations, real-time cart updates, and a beautiful cyberpunk shopping UI.
 
-## 🌟 Features
+🌟 Features
+🧠 Voice Shopping Assistant
 
-### Voice Shopping Assistant
-- **Natural Conversations**: Friendly AI assistant (Alex) helps customers browse and buy products
-- **Product Discovery**: Ask about products and get detailed descriptions with features and pricing
-- **Smart Cart Management**: Add items via voice commands with real-time cart updates
-- **Voice Checkout**: Complete purchases through natural conversation
+Natural conversations with your AI shopping buddy (Alex)
 
-### Real-time Shopping Cart
-- **Live Updates**: Cart syncs automatically between voice and UI
-- **File-based Persistence**: Cart state persists across sessions
-- **Visual Feedback**: Cyberpunk-themed UI with smooth animations
-- **Item Management**: Add, remove, and view cart items easily
+Product discovery: Ask anything about items, pricing, or inventory
 
-### Order Management
-- **Order Creation**: Generates unique order IDs for each purchase
-- **Order History**: All orders saved as JSON files
-- **Order Details**: Complete order information with line items and totals
-- **Success Animation**: Beautiful checkout confirmation with order summary
+Smart cart management: Add/remove items using voice commands
 
-## 🛠️ Tech Stack
+Voice checkout: Complete your order simply by talking
 
-- **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS, Framer Motion
-- **Backend**: Python, LiveKit Agents SDK
-- **Voice**: Deepgram STT, Google Gemini 2.0 Flash, Murf TTS
-- **Real-time**: LiveKit WebRTC
-- **Data**: File-based JSON storage
+🛒 Real-time Shopping Cart
 
-## 📦 Product Catalog
+Live syncing between voice agent & UI
 
-### Mugs
-- Cyberpunk Coffee Mug (₹899)
-- Hacker's Energy Mug (₹1299)
+File-based persistence (cart.json)
 
-### T-Shirts (S, M, L, XL)
-- Neural Network T-Shirt (₹799)
-- AI Developer Tee (₹699)
+Cyberpunk UI with smooth animations
 
-### Hoodies (M, L, XL)
-- Cyberpunk Hoodie (₹1999)
-- Code Warrior Hoodie (₹2299)
+Add/remove items with instant visual feedback
 
-### Accessories
-- Tech Geek Cap (₹499)
-- Developer Backpack (₹2499)
-- RGB Gaming Mouse (₹1499)
-- Mechanical Keyboard (₹3999)
+📦 Order Management
 
-## 🚀 Quick Start
+Unique Order ID generated automatically
 
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-- pnpm
-- LiveKit Cloud account (or local server)
-- API Keys: Deepgram, Google AI, Murf
+Order history stored as JSON
 
-### Setup
+Complete order summary with totals
 
-1. **Clone the repository**
-```bash
-git clone https://github.com/GhanshyamJha05/Ninth_Task_murf_ai.git
-cd Ninth_Task_murf_ai
-```
+Success animation on checkout
 
-2. **Backend Setup**
-```bash
+🛠️ Tech Stack
+Frontend
+
+Next.js 15
+
+React + TypeScript
+
+Tailwind CSS
+
+Framer Motion
+
+Backend
+
+Python
+
+LiveKit Agents SDK
+
+Voice & AI
+
+Deepgram Speech-to-Text
+
+Google Gemini 2.0 Flash
+
+Murf.ai TTS
+
+Storage
+
+JSON file-based database
+
+📦 Product Catalog
+☕ Mugs
+
+Cyberpunk Coffee Mug — ₹899
+
+Hacker's Energy Mug — ₹1299
+
+👕 T-Shirts (S, M, L, XL)
+
+Neural Network Tee — ₹799
+
+AI Developer Tee — ₹699
+
+🧥 Hoodies (M, L, XL)
+
+Cyberpunk Hoodie — ₹1999
+
+Code Warrior Hoodie — ₹2299
+
+🎧 Accessories
+
+Tech Geek Cap — ₹499
+
+Developer Backpack — ₹2499
+
+RGB Gaming Mouse — ₹1499
+
+Mechanical Keyboard — ₹3999
+
+🚀 Quick Start
+📌 Prerequisites
+
+Python 3.10+
+
+Node.js 18+
+
+pnpm
+
+LiveKit account (cloud or local)
+
+API Keys: Deepgram, Google AI, Murf
+
+📥 Setup
+1️⃣ Clone the repository
+git clone https://github.com/vikasyadav097/AI-Voice-Agent-Day-9-Ecommerce 
+🖥️ Backend Setup
 cd backend
 python -m venv .venv
-.venv\Scripts\activate  # Windows
-source .venv/bin/activate  # Mac/Linux
-pip install -r requirements.txt
-cp .env.example .env.local
-# Add your API keys to .env.local
-```
 
-3. **Frontend Setup**
-```bash
+
+Activate venv:
+
+Windows:
+
+.venv\Scripts\activate
+
+
+Mac/Linux:
+
+source .venv/bin/activate
+
+
+Install packages:
+
+pip install -r requirements.txt
+
+
+Create env file:
+
+cp .env.example .env.local
+
+
+Add your API keys to .env.local.
+
+🎨 Frontend Setup
 cd frontend
 pnpm install
 cp .env.example .env.local
-# Add your LiveKit credentials to .env.local
-```
 
-4. **Start LiveKit Server** (in project root)
-```bash
-.\livekit-server.exe --dev  # Windows
-./livekit-server --dev      # Mac/Linux
-```
 
-5. **Start Backend Agent**
-```bash
+Add your LiveKit credentials.
+
+🛰️ Start LiveKit Server (root folder)
+
+Windows:
+
+.\livekit-server.exe --dev
+
+
+Mac/Linux:
+
+./livekit-server --dev
+
+🤖 Start Backend Agent
 cd backend
 .venv\Scripts\python.exe src/agent.py dev
-```
 
-6. **Start Frontend**
-```bash
+🌐 Start Frontend
 cd frontend
 pnpm dev
-```
 
-7. **Open Browser**
-Navigate to `http://localhost:3001`
 
-## 💬 Voice Commands
+Open: http://localhost:3001
 
-### Browsing Products
-- "What products do you have?"
-- "Tell me about the gaming mouse"
-- "Show me hoodies"
-- "What's the price of the keyboard?"
+💬 Voice Commands
+🔍 Browsing
 
-### Adding to Cart
-- "I want a mouse"
-- "Add the keyboard to my cart"
-- "I'll take the hoodie in size large"
+“What products do you have?”
 
-### Cart Management
-- "What's in my cart?"
-- "Show me my cart"
-- "Remove the mouse"
+“Tell me about the gaming mouse.”
 
-### Checkout
-- "I'm ready to checkout"
-- "Complete my order"
-- "Checkout please"
+“Show me hoodies.”
 
-## 🎨 UI Features
+“What's the price of the keyboard?”
 
-### Product Catalog (Left Panel)
-- Browse all available products
-- View prices, descriptions, and stock
-- Click "ADD TO CART" buttons
-- Visual feedback with checkmarks
+🛒 Adding Items
 
-### Shopping Cart (Right Panel)
-- Real-time cart updates
-- Item quantities and totals
-- Remove items with trash icon
-- Checkout button with success animation
+“Add the keyboard to my cart.”
 
-### Success Animation
-- Green checkmark animation
-- Order summary with all items
-- Total price display
-- Auto-dismisses after 5 seconds
+“I want a mouse.”
 
-## 📁 Project Structure
+“I’ll take the hoodie in size large.”
 
-```
-├── backend/
-│   ├── src/
-│   │   ├── agent.py          # Main voice agent
-│   │   ├── commerce.py       # E-commerce logic
-│   │   └── murf_tts.py       # Murf TTS integration
-│   └── .env.local            # Backend config
-├── frontend/
-│   ├── app/
-│   │   └── api/
-│   │       ├── cart/         # Cart API endpoints
-│   │       ├── checkout/     # Checkout endpoint
-│   │       └── products/     # Products endpoint
-│   ├── components/
-│   │   └── app/
-│   │       ├── product-catalog.tsx
-│   │       ├── shop-cart.tsx
-│   │       └── session-view.tsx
-│   └── .env.local            # Frontend config
-├── shared-data/
-│   ├── catalog.json          # Product catalog
-│   ├── cart.json             # Current cart state
-│   └── orders/               # Order history
-└── livekit-server.exe        # LiveKit server
-```
+🧹 Cart Management
 
-## 🔧 Configuration
+“What’s in my cart?”
 
-### Backend (.env.local)
-```env
+“Remove the mouse.”
+
+“Show my cart.”
+
+💳 Checkout
+
+“I’m ready to checkout.”
+
+“Complete my order.”
+
+“Checkout please.”
+
+🎨 UI Features
+📚 Product Catalog (Left Panel)
+
+Browse products
+
+Add items with a button
+
+Neon cyberpunk visual effects
+
+🛒 Shopping Cart (Right Panel)
+
+Real-time item updates
+
+Quantity + total price
+
+Trash icon to remove items
+
+✔️ Checkout Animation
+
+Green checkmark
+
+Order summary
+
+Auto-close after 5 seconds
+
+📁 Project Structure
+backend/
+ ├── src/
+ │    ├── agent.py
+ │    ├── commerce.py
+ │    └── murf_tts.py
+ └── .env.local
+
+frontend/
+ ├── app/
+ │   └── api/
+ │       ├── cart/
+ │       ├── checkout/
+ │       └── products/
+ ├── components/app/
+ │       ├── product-catalog.tsx
+ │       ├── shop-cart.tsx
+ │       └── session-view.tsx
+ └── .env.local
+
+shared-data/
+ ├── catalog.json
+ ├── cart.json
+ └── orders/
+
+livekit-server.exe
+
+🔧 Configuration
+Backend .env.local
 LIVEKIT_URL=ws://localhost:7880
 LIVEKIT_API_KEY=your_key
 LIVEKIT_API_SECRET=your_secret
 DEEPGRAM_API_KEY=your_key
 GOOGLE_API_KEY=your_key
 MURF_API_KEY=your_key
-```
 
-### Frontend (.env.local)
-```env
+Frontend .env.local
 NEXT_PUBLIC_LIVEKIT_URL=ws://localhost:7880
 LIVEKIT_API_KEY=your_key
 LIVEKIT_API_SECRET=your_secret
-```
 
-## 🎯 Key Features Implemented
+🎯 Key Features Implemented
 
-✅ Voice-powered product browsing  
-✅ Natural language cart management  
-✅ Real-time cart synchronization  
-✅ File-based cart persistence  
-✅ Order creation and storage  
-✅ Checkout success animation  
-✅ Friendly AI personality  
-✅ Cyberpunk-themed UI  
-✅ Responsive design  
-✅ Error handling  
+✅ Voice product browsing
+✅ Natural language cart control
+✅ Real-time cart sync
+✅ Persistent cart storage
+✅ Order creation
+✅ Checkout success screen
+✅ Friendly AI personality
+✅ Cyberpunk UI
+✅ Fully responsive
+✅ Error-handled backend
 
-## 🐛 Troubleshooting
+🐛 Troubleshooting
+Cart Not Updating
 
-### Cart not updating
-- Wait 2 seconds for polling to refresh
-- Check `shared-data/cart.json` exists
-- Verify frontend is on port 3001
+Wait 2 seconds
 
-### Voice agent not responding
-- Check backend logs for errors
-- Verify all API keys are set
-- Ensure LiveKit server is running
+Check shared-data/cart.json
 
-### Checkout not working
-- Ensure cart has items
-- Check `shared-data/orders/` directory exists
-- Verify file permissions
+Ensure frontend running on port 3001
 
-## 📝 License
+Voice Agent Not Responding
 
-MIT License - See LICENSE file for details
+Check backend logs
 
-## 👨‍💻 Author
+Verify API keys
 
-Ghanshyam Jha
-- GitHub: [@GhanshyamJha05](https://github.com/GhanshyamJha05)
+Ensure LiveKit server is running
 
-## 🙏 Acknowledgments
+Checkout Issues
 
-- LiveKit for the amazing real-time infrastructure
-- Murf AI for ultra-fast TTS
-- Google Gemini for intelligent conversations
-- Deepgram for accurate speech recognition
+Make sure items are in cart
 
----
+Check shared-data/orders/ exists
 
-**Built for the 10 Days of Voice Agents Challenge - Day 9** 🎉
+Verify file write permissions
+
+📝 License
+
+MIT License — see LICENSE file.
+
+
+🙏 Acknowledgments
+
+LiveKit for real-time infra
+
+Murf AI for TTS
+
+Google Gemini for intelligence
+
+Deepgram for accurate STT
+
+Built for 10 Days of Voice Agents Challenge — Day 9 🎉
+
+| Day      | Status         |
+| -------- | -------------- |
+| Day 1    | ✅ Completed    |
+| Day 2    | ✅ Completed    |
+| Day 3    | ✅ Completed    |
+| Day 4    | ✅ Completed    |
+| Day 5    | ✅ Completed    |
+| Day 6    | ✅ Completed    |
+| Day 7    | ✅ Completed    |
+| Day 8    | ✅ Completed    |
+| Day 9    | ✅ Completed    |
+| Day 10   | 🔜 Coming soon |
